@@ -25,7 +25,10 @@ private:
 			int color = 128 + rand() % 128;
 			int x = rand() % 256;
 			int y = rand() % 2;
-			flakes[y][x] = color;
+
+			// Only place it if there is room, if the screen fills up we don't wnat to randomly change the pixel color
+			if (flakes[y][x] == 0)
+				flakes[y][x] = color;
 		}
 	}
 
