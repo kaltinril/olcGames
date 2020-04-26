@@ -16,6 +16,9 @@ private:
 	int frame_skip = 10;
 	int frame = 0;
 
+	int snow_fall_rate = 0;
+	int max_snow_fall_rate = 50;
+
 	void SpawnSnow(int number_of_flakes) {
 		for (int i = 0; i < number_of_flakes; i++)
 		{
@@ -56,7 +59,7 @@ public:
 	bool OnUserCreate() override
 	{
 		// Create some random snow flakes
-		SpawnSnow(5);
+		SpawnSnow(100);
 
 		return true;
 	}
@@ -65,8 +68,18 @@ public:
 	{
 		// Spawn new snow
 		if (GetMouse(0).bHeld)
-		{
 			SpawnSnowAtSpot(GetMouseX(), GetMouseY());
+
+		if (GetKey(olc::Key::UP).bPressed) {
+			snow_fall_rate++;
+			if (snow_fall_rate > max_snow_fall_rate)
+				snow_fall_rate = max_snow_fall_rate;
+		}
+
+		if (GetKey(olc::Key::DOWN).bPressed) {
+			snow_fall_rate--;
+			if (snow_fall_rate < 0)
+				snow_fall_rate = 0;
 		}
 
 
@@ -79,12 +92,11 @@ public:
 		frame++;
 		if (frame > frame_skip)
 		{
-			SpawnSnow(1);
+			SpawnSnow(snow_fall_rate); // Add some snowfall randomly
 			MoveSnow();
 			frame = 0;
 		}
 		
-				
 		return true;
 	}
 };
