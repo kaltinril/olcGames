@@ -36,7 +36,7 @@ private:
 	void MoveSnow()
 	{
 		int direction = (rand() % 3) - 1;
-		for (int y = ScreenHeight() - 2; y >= 0; y--) {
+		for (int y = ScreenHeight() - 3; y >= 0; y--) {
 			for (int x = 0; x < ScreenWidth(); x++)
 			{
 				direction = (rand() % 3) - 1;
