@@ -5,9 +5,6 @@
 #include <time.h>
 
 
-
-
-
 // Override base class with your custom functionality
 class Example : public olc::PixelGameEngine
 {
@@ -154,7 +151,7 @@ public:
 	};
 
 	ParticleEngine particleEngine;
-	Renderable blue;
+	Renderable diamond;
 	Renderable star;
 	Renderable fire;
 	Renderable smoke;
@@ -164,14 +161,14 @@ public:
 	bool OnUserCreate() override
 	{
 		// Load all particle images
-		blue.Load("./gfx/particles/blue.png");
+		diamond.Load("./gfx/particles/diamond.png");
 		star.Load("./gfx/particles/star.png");
 		fire.Load("./gfx/particles/fire.png");
 		smoke.Load("./gfx/particles/smoke2.png");
-		circle.Load("./gfx/particles/darkbluecircle.png");
+		circle.Load("./gfx/particles/circle.png");
 
 		Renderable* img[5];
-		img[0] = &blue;
+		img[0] = &diamond;
 		img[1] = &star;
 		img[2] = &fire;
 		img[3] = &smoke;
@@ -190,7 +187,7 @@ public:
 			p.velocity = { 40, -60 };
 			float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 			float r2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-			p.acceleration = { -r * 80 , r2 * 65};
+			p.acceleration = { -r * 80 , r2 * 60};
 			p.color = olc::Pixel(rand() % 256, rand() % 256, rand() % 256, rand() % 256);
 			p.alive = true;
 			p.scale = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX)) ;
@@ -205,7 +202,8 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{	
-		SetPixelMode(olc::Pixel::ALPHA);
+		//SetPixelMode(olc::Pixel::ALPHA);
+		//SetPixelMode(olc::Pixel::NORMAL);
 		particleEngine.Update(this, fElapsedTime);
 		particleEngine.Draw(this);
 
