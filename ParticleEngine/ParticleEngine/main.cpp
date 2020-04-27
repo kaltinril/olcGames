@@ -51,6 +51,19 @@ public:
 		}
 	};
 
+	static int randBetween(int min, int max)
+	{
+		int range = max - min;
+		return (rand() % range) + min;
+	}
+
+	static float randBetween(float min, float max)
+	{
+		float range = max - min;
+		float value = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		return (value * range) + min;
+	}
+
 
 	class Particle
 	{
@@ -86,6 +99,30 @@ public:
 				position.x = position.x + (velocity.x * dElapsedTime);
 				position.y = position.y + (velocity.y * dElapsedTime);
 
+				// Adjust size and alpha based on time alive
+				float normalizedLifetime = current_lifetime / max_lifetime;
+
+				// we want particles to fade in and fade out, so we'll calculate alpha
+				// to be (normalizedLifetime) * (1-normalizedLifetime). this way, when
+				// normalizedLifetime is 0 or 1, alpha is 0. the maximum value is at
+				// normalizedLifetime = .5, and is
+				// (normalizedLifetime) * (1-normalizedLifetime)
+				// (.5)                 * (1-.5)
+				// .25
+				// since we want the maximum alpha to be 1, not .25, we'll scale the 
+				// entire equation by 4.
+				int alpha = int((4 * normalizedLifetime * (1 - normalizedLifetime)) * 256);
+				//int alpha = int((1 - (4 * normalizedLifetime * (1 - normalizedLifetime))) * 256);
+
+				// This looks better
+				alpha = (1-normalizedLifetime) * 256;
+				
+				color.a = alpha;
+				color.r = alpha * ( 0.80); // Making it slightly purple
+				color.g = alpha * (0.25); // Making it slightly purple
+				color.b = alpha;
+
+				scale = (0.75f + (.25f * normalizedLifetime));
 				//pge->DrawDecal({ position.x, position.y }, sprite->decal, { scale, scale }, color);
 			}
 		}
@@ -148,12 +185,12 @@ public:
 
 		void Load()
 		{
-			darkCircle.Load("./gfx/particles/darkbluecircle.png");
+			darkCircle.Load("./gfx/particles/bluedark.png");
 		}
 
 		void Update(olc::PixelGameEngine* pge, float dElapsedTime)
 		{
-			GenerateParticle(pge);
+			GenerateParticles(pge);
 
 			for (int i = particles.size() - 1; i >= 0; i--)
 			{
@@ -182,19 +219,6 @@ public:
 				
 		}
 
-		int randBetween(int min, int max)
-		{
-			int range = max - min;
-			return (rand() % range) + min;
-		}
-
-		float randBetween(float min, float max)
-		{
-			float range = max - min;
-			float value = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-			return (value * range) + min;
-		}
-
 		// Abstract this to shapes or patterns
 		// for now going to try to re-create the shield effect from topfalling
 		void GenerateParticle(olc::PixelGameEngine* pge)
@@ -212,26 +236,40 @@ public:
 			p.position.x = (x * radius) + 100;
 			p.position.y = (y * radius) + 100;
 
+			int dir = rand() % 2;
+			if (dir == 0)
+				dir = -1;
+			p.velocity = { randBetween(10.0f, 30.0f) * x * dir, randBetween(10.0f, 30.0f) * y * dir };
+			p.acceleration = { randBetween(30.0f, 50.0f) * x * dir, randBetween(30.0f, 50.0f) * y * dir };
+			
 
-			p.velocity = { randBetween(10.0f, 30.0f), -60.0f };
-			float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-			float r2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-			p.acceleration = { -r * 80 , r2 * 60 };
-			p.color = olc::Pixel(255, 255, 255);
+			p.color = olc::Pixel(255, 255, 255, 255);
 			p.alive = true;
 			p.scale = randBetween(0.5f, 0.7f);
+			
 
 			p.sprite = &darkCircle;
-			p.max_lifetime = randBetween(0.1f, 0.5f);
+			p.max_lifetime = randBetween(0.2f, 0.7f);
 
 
 			particles.push_back(p);
+		}
+
+		void GenerateParticles(olc::PixelGameEngine* pge) {
+			if (particles.size() < maxParticles)
+			{
+				int missing = maxParticles - particles.size();
+				for (int i = 0; i < missing; i++)
+					GenerateParticle(pge);
+			}
+
 		}
 
 	public:
 		double twoPi = M_PI * 2;
 		std::vector<Particle> particles;
 		Renderable darkCircle;
+		int maxParticles = 700;
 
 	};
 
@@ -268,7 +306,7 @@ public:
 		// Create 200 random particles
 		vec2d start = { float(rand() % 156) + 50, float(rand() % 60) + 180 };
 		
-		for (int i = 0; i < 50000; i++)
+		for (int i = 0; i < 1; i++)
 		{
 			Particle p;
 			p.position = start;
@@ -305,7 +343,7 @@ public:
 int main()
 {
 	Example demo;
-	if (demo.Construct(256, 240, 4, 4))
+	if (demo.Construct(640, 480, 2, 2))
 		demo.Start();
 	return 0;
 }
