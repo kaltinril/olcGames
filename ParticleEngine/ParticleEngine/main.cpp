@@ -298,7 +298,8 @@ public:
 	Renderable fire;
 	Renderable smoke;
 	Renderable circle;
-	Renderable* img[5];
+	Renderable blue;
+	Renderable* img[6];
 
 public:
 	bool OnUserCreate() override
@@ -309,6 +310,7 @@ public:
 		fire.Load("./gfx/particles/fire.png");
 		smoke.Load("./gfx/particles/smoke2.png");
 		circle.Load("./gfx/particles/circle.png");
+		blue.Load("./gfx/particles/bluedark.png");
 
 
 		img[0] = &diamond;
@@ -316,6 +318,7 @@ public:
 		img[2] = &fire;
 		img[3] = &smoke;
 		img[4] = &circle;
+		img[5] = &blue;
 
 		particleEngine.Load();
 
@@ -325,7 +328,7 @@ public:
 		// Create 200 random particles
 		vec2d start = { float(rand() % 156) + 50, float(rand() % 60) + 180 };
 		
-		for (int i = 0; i < 1; i++)
+		for (int i = 0; i < 100; i++)
 		{
 			Particle p;
 			p.position = start;
@@ -336,7 +339,7 @@ public:
 			p.color = olc::Pixel(rand() % 256, rand() % 256, rand() % 256, rand() % 256);
 			p.alive = true;
 			p.scale = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX)) ;
-			int whichImg = rand() % 5;
+			int whichImg = rand() % 6;
 			p.sprite = img[whichImg];
 			p.max_lifetime = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX)) * 5.0f;
 
@@ -349,7 +352,6 @@ public:
 	bool OnUserUpdate(float fElapsedTime) override
 	{	
 		particleEngine.moveEmitter({ float(GetMouseX()), float(GetMouseY()) });
-		//particleEngine.emitterPosition = { float(GetMouseX()), float(GetMouseY()) };
 
 		if (GetMouse(0).bHeld)
 			particleEngine.particlesMovieWithEmitter = true;
