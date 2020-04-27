@@ -73,7 +73,7 @@ public:
 		
 		}
 
-		void Update(olc::PixelGameEngine* pge, float dElapsedTime)
+		void Update(olc::PixelGameEngine* pge, float dElapsedTime, vec2d emitterDelta, bool moveWithEmitter)
 		{
 			// Check if particle should be killed
 			if (position.x > pge->ScreenWidth()
@@ -88,6 +88,13 @@ public:
 
 			if (alive)
 			{
+				// Adjust position of entire system based on emitterPosition
+				if (moveWithEmitter)
+				{
+					position.x = position.x + emitterDelta.x;
+					position.y = position.y + emitterDelta.y;
+				}
+
 				// Increase how long this particle has been alive
 				current_lifetime += dElapsedTime;
 
@@ -196,7 +203,7 @@ public:
 			{
 				if (particles[i].alive)
 				{
-					particles[i].Update(pge, dElapsedTime);
+					particles[i].Update(pge, dElapsedTime, emitterDelta, particlesMovieWithEmitter);
 				}
 				else
 				{
@@ -208,8 +215,8 @@ public:
 				}
 			}
 
-			for (Particle& particle : particles)
-				particle.Update(pge, dElapsedTime);
+			//for (Particle& particle : particles)
+			//	particle.Update(pge, dElapsedTime);
 		}
 
 		void Draw(olc::PixelGameEngine* pge)
@@ -233,8 +240,8 @@ public:
 
 			Particle p;
 			int radius = 40;
-			p.position.x = (x * radius) + 100;
-			p.position.y = (y * radius) + 100;
+			p.position.x = (x * radius) + emitterPosition.x;
+			p.position.y = (y * radius) + emitterPosition.y;
 
 			int dir = rand() % 2;
 			if (dir == 0)
@@ -265,11 +272,23 @@ public:
 
 		}
 
+		void moveEmitter(vec2d newPosition)
+		{
+			emitterDelta.x = newPosition.x - emitterPosition.x;
+			emitterDelta.y = newPosition.y - emitterPosition.y;
+
+			emitterPosition = newPosition;
+		}
+
 	public:
 		double twoPi = M_PI * 2;
 		std::vector<Particle> particles;
 		Renderable darkCircle;
-		int maxParticles = 700;
+		int maxParticles = 1200;
+
+		vec2d emitterDelta;
+		vec2d emitterPosition;
+		bool particlesMovieWithEmitter = false;
 
 	};
 
@@ -329,6 +348,14 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{	
+		particleEngine.moveEmitter({ float(GetMouseX()), float(GetMouseY()) });
+		//particleEngine.emitterPosition = { float(GetMouseX()), float(GetMouseY()) };
+
+		if (GetMouse(0).bHeld)
+			particleEngine.particlesMovieWithEmitter = true;
+		else
+			particleEngine.particlesMovieWithEmitter = false;
+
 		//SetPixelMode(olc::Pixel::ALPHA);
 		//SetPixelMode(olc::Pixel::NORMAL);
 		particleEngine.Update(this, fElapsedTime);
