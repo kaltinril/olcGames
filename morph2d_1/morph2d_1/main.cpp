@@ -1,48 +1,68 @@
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
 
+#define _USE_MATH_DEFINES // So we can get M_PI (pi = 3.1426....)
+#include <math.h>
+
 // Override base class with your custom functionality
-class Example : public olc::PixelGameEngine
+class Morphv1 : public olc::PixelGameEngine
 {
 public:
-	Example()
+	Morphv1()
 	{
 		// Name you application
-		sAppName = "Example";
+		sAppName = "2D Morph v1";
 	}
 
+	// Simple struct to make accessing X/Y easier.
 	struct vec2d
 	{
 		float x, y;
 	};
 
+	// Objects
 	vec2d* points;
 	vec2d* line;
 	vec2d* square;
 	vec2d* circle;
 
+	// Object morph order
 	vec2d* objects[3];
 	int currentObject = 0;
 	int nextObject = 1;
 
+	int totalPoints = 1000; // How many points do we want to use?
+
+	// Morphing control
 	float transitionTime = 1.0f;
 	float currentTransitionTime = 0.0f;
 	bool isMorphing = false;
-	int totalPoints = 1000;
+	
 
+	double twoPi = M_PI * 2; // 360 degrees but in Radians
+
+	// Create points along the perimeter of a circle
 	void BuildPointsOnCircle(vec2d* points, float centerX, float centerY, int radius, int arrayStart, int numberOfSteps)
 	{
+		double angleStep = double(twoPi) / numberOfSteps;
 
+		for (int i = 0; i < numberOfSteps; i++)
+		{
+			// Create X and Y around a circle through an incrementing angle
+			float x = cos(angleStep * i);
+			float y = sin(angleStep * i);
+
+			points[i].x = centerX + (x * radius);
+			points[i].y = centerY + (y * radius);
+		}
 	}
 
+	// Create points along the slope of a line
 	void BuildPointsOnLine(vec2d* points, float x1, float y1, float x2, float y2, int arrayStart, int numberOfSteps)
 	{
-		//vec2d* points = new vec2d[numberOfSteps];
-
 		float xSlope = (x2 - x1) / float(numberOfSteps - 1);
 		float ySlope = (y2 - y1) / float(numberOfSteps - 1);
 
-		//int endLocation = arrayStart + numberOfSteps;
 		for (int i = 0; i < numberOfSteps; i++)
 		{
 			int arrayPos = arrayStart + i;
@@ -51,7 +71,8 @@ public:
 		}
 	}
 
-	void BuildSquareOutline(vec2d* shapeArray, float x1, float y1, float x2, float y2, int arrayStart, int numberOfSteps)
+	// Build the 4 sides of a rectangle
+	void BuildRectangleOutline(vec2d* shapeArray, float x1, float y1, float x2, float y2, int arrayStart, int numberOfSteps)
 	{
 		int stepsPerSide = numberOfSteps / 4;
 
@@ -81,26 +102,29 @@ public:
 public:
 	bool OnUserCreate() override
 	{
-		
+		// Create storage of the points
 		points = new vec2d[totalPoints];
 		square = new vec2d[totalPoints];
 		circle = new vec2d[totalPoints];
 		line = new vec2d[totalPoints];
 
+		// Create list of objects to morph between
 		objects[0] = line;
 		objects[1] = square;
 		objects[2] = circle;
 
+		// Build the shapes
 		BuildPointsOnLine(line, 30, 50, 200, 220, 0, totalPoints);
-		BuildPointsOnLine(points, 30, 50, 200, 220, 0, totalPoints);
-		BuildSquareOutline(square, 10, 10, 100, 100, 0, totalPoints);
-		BuildSquareOutline(circle, 50, 50, 175, 125, 0, totalPoints);
+		BuildRectangleOutline(square, 10, 10, 100, 100, 0, totalPoints);
+		BuildPointsOnCircle(circle, ScreenWidth() / 2, ScreenHeight() / 2, 50, 0, totalPoints);
 
 		// Randomly shuffle the points so they are not in a straight lne
-		std::random_shuffle(points, points + totalPoints);
 		std::random_shuffle(line, line + totalPoints);
 		std::random_shuffle(square, square + totalPoints);
-		std::random_shuffle(circle, circle + totalPoints);
+
+		// Start us off in the line position
+		points = line;
+
 		return true;
 	}
 
@@ -108,12 +132,24 @@ public:
 	{
 		Clear(olc::BLACK);
 
+		// Draw the points
 		for (int i = 0; i < totalPoints; i++)
-			Draw(points[i].x, points[i].y, olc::WHITE);
+		{
+			float colorShade = (250.0f * (float(i) / float(totalPoints))) + 5.0f;
+			Draw(points[i].x, points[i].y, olc::Pixel(colorShade, colorShade, colorShade));
+		}
 
 		if (GetMouse(0).bPressed)
 			isMorphing = true;
 
+
+		if (GetMouse(1).bPressed && !isMorphing)
+		{
+			nextObject = (nextObject + 1) % 3;
+			isMorphing = true;
+		}
+
+		// Perform the per-elasped time morphing
 		if (isMorphing)
 		{
 			float percentComplete = currentTransitionTime / transitionTime;
@@ -127,17 +163,12 @@ public:
 
 			if (!isMorphing) {
 				currentTransitionTime = 0.0f;
-				currentObject = (currentObject + 1) % 3;
+				currentObject = nextObject;
 				nextObject = (nextObject + 1) % 3;
 			}
 
 			currentTransitionTime = currentTransitionTime + fElapsedTime;
 		}
-
-		//Draw(11, 11, olc::RED);
-		//Draw(51, 51, olc::RED);
-		//Draw(101, 101, olc::RED);
-		//Draw(141, 141, olc::RED);
 
 		return true;
 	}
@@ -145,7 +176,7 @@ public:
 
 int main()
 {
-	Example demo;
+	Morphv1 demo;
 	if (demo.Construct(256, 240, 4, 4))
 		demo.Start();
 	return 0;
