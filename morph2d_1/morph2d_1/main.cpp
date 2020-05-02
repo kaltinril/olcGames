@@ -21,6 +21,10 @@ public:
 	vec2d* square;
 	vec2d* circle;
 
+	vec2d* objects[3];
+	int currentObject = 0;
+	int nextObject = 1;
+
 	float transitionTime = 1.0f;
 	float currentTransitionTime = 0.0f;
 	bool isMorphing = false;
@@ -83,14 +87,20 @@ public:
 		circle = new vec2d[totalPoints];
 		line = new vec2d[totalPoints];
 
+		objects[0] = line;
+		objects[1] = square;
+		objects[2] = circle;
+
 		BuildPointsOnLine(line, 30, 50, 200, 220, 0, totalPoints);
 		BuildPointsOnLine(points, 30, 50, 200, 220, 0, totalPoints);
 		BuildSquareOutline(square, 10, 10, 100, 100, 0, totalPoints);
+		BuildSquareOutline(circle, 50, 50, 175, 125, 0, totalPoints);
 
 		// Randomly shuffle the points so they are not in a straight lne
 		std::random_shuffle(points, points + totalPoints);
 		std::random_shuffle(line, line + totalPoints);
 		std::random_shuffle(square, square + totalPoints);
+		std::random_shuffle(circle, circle + totalPoints);
 		return true;
 	}
 
@@ -98,35 +108,30 @@ public:
 	{
 		Clear(olc::BLACK);
 
-		// called once per frame, draws random coloured pixels
-		/*for (int i = 0; i < 100; i++)
-			Draw(line[i].x, line[i].y, olc::RED);
-
-		for (int i = 0; i < 100; i++)
-			Draw(square[i].x, square[i].y, olc::BLUE);
-			*/
 		for (int i = 0; i < totalPoints; i++)
 			Draw(points[i].x, points[i].y, olc::WHITE);
 
 		if (GetMouse(0).bPressed)
-		{
 			isMorphing = true;
-			//points = MorphPartial(line, square, 1.0f, 100);
-		}
 
 		if (isMorphing)
 		{
 			float percentComplete = currentTransitionTime / transitionTime;
-			//percentComplete = 1.0f;
 			if (percentComplete >= 1.0f)
 			{
 				percentComplete = 1.0f;
 				isMorphing = false;
 			}
 
-			points = MorphPartial(line, square, percentComplete, totalPoints);
+			points = MorphPartial(objects[currentObject], objects[nextObject], percentComplete, totalPoints);
+
+			if (!isMorphing) {
+				currentTransitionTime = 0.0f;
+				currentObject = (currentObject + 1) % 3;
+				nextObject = (nextObject + 1) % 3;
+			}
+
 			currentTransitionTime = currentTransitionTime + fElapsedTime;
-			
 		}
 
 		//Draw(11, 11, olc::RED);
