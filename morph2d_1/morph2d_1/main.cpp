@@ -136,7 +136,8 @@ public:
 		for (int i = 0; i < totalPoints; i++)
 		{
 			float colorShade = (250.0f * (float(i) / float(totalPoints))) + 5.0f;
-			Draw(points[i].x, points[i].y, olc::Pixel(colorShade, colorShade, colorShade));
+			//Draw(points[i].x, points[i].y, olc::Pixel(colorShade, colorShade, colorShade));
+			Draw(points[i].x, points[i].y, olc::WHITE);
 		}
 
 		if (GetMouse(0).bPressed)
