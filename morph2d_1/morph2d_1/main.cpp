@@ -25,9 +25,14 @@ public:
 	vec2d* line;
 	vec2d* square;
 	vec2d* circle;
+	vec2d* triangle;
+	vec2d* poly;
+	int polySides = 5;
+	int polyRadius = 60;
 
 	// Object morph order
-	vec2d* objects[3];
+	vec2d* objects[5];
+	int totalObjects = 5;
 	int currentObject = 0;
 	int nextObject = 1;
 
@@ -37,9 +42,28 @@ public:
 	float transitionTime = 1.0f;
 	float currentTransitionTime = 0.0f;
 	bool isMorphing = false;
+	bool shufflePoints = false;
 	
 
 	double twoPi = M_PI * 2; // 360 degrees but in Radians
+
+	void BuildNShapePerimeter(vec2d* points, float centerX, float centerY, int radius, int arrayStart, int numberOfSteps, int numberOfSides)
+	{
+		int stepsPerSide = numberOfSteps / numberOfSides;
+		double angleToNextSide = double(twoPi) / numberOfSides;
+
+		for (int i = 0; i < numberOfSides; i++)
+		{
+			// Create X and Y around a circle through an incrementing angle
+			float x1 = centerX + cos(angleToNextSide * i) * radius;
+			float y1 = centerY + sin(angleToNextSide * i) * radius;
+
+			float x2 = centerX + cos(angleToNextSide * (i + 1)) * radius;
+			float y2 = centerY + sin(angleToNextSide * (i + 1)) * radius;
+
+			BuildPointsOnLine(points, x1, y1, x2, y2, arrayStart + (i * stepsPerSide), stepsPerSide);
+		}
+	}
 
 	// Create points along the perimeter of a circle
 	void BuildPointsOnCircle(vec2d* points, float centerX, float centerY, int radius, int arrayStart, int numberOfSteps)
@@ -99,6 +123,23 @@ public:
 		return points;
 	}
 
+	void BuildShapes()
+	{
+		BuildPointsOnLine(line, 30, 50, 200, 220, 0, totalPoints);
+		BuildRectangleOutline(square, 10, 10, 100, 100, 0, totalPoints);
+		BuildPointsOnCircle(circle, 170, 70, 50, 0, totalPoints);
+		BuildNShapePerimeter(poly, ScreenWidth() / 2, ScreenHeight() / 2, polyRadius, 0, totalPoints, polySides);
+		BuildNShapePerimeter(triangle, ScreenWidth() / 2, ScreenHeight() / 2, 40, 0, totalPoints, 3);
+	}
+
+	void ShuffleShapes()
+	{
+		std::random_shuffle(line, line + totalPoints);
+		std::random_shuffle(square, square + totalPoints);
+		std::random_shuffle(poly, poly + totalPoints);
+		std::random_shuffle(triangle, triangle + totalPoints);
+	}
+
 public:
 	bool OnUserCreate() override
 	{
@@ -107,20 +148,22 @@ public:
 		square = new vec2d[totalPoints];
 		circle = new vec2d[totalPoints];
 		line = new vec2d[totalPoints];
+		poly = new vec2d[totalPoints];
+		triangle = new vec2d[totalPoints];
 
 		// Create list of objects to morph between
 		objects[0] = line;
-		objects[1] = square;
-		objects[2] = circle;
+		objects[1] = triangle;
+		objects[2] = square;
+		objects[3] = poly;
+		objects[4] = circle;
 
-		// Build the shapes
-		BuildPointsOnLine(line, 30, 50, 200, 220, 0, totalPoints);
-		BuildRectangleOutline(square, 10, 10, 100, 100, 0, totalPoints);
-		BuildPointsOnCircle(circle, ScreenWidth() / 2, ScreenHeight() / 2, 50, 0, totalPoints);
+		// Build all the shapes
+		BuildShapes();
 
 		// Randomly shuffle the points so they are not in a straight lne
-		std::random_shuffle(line, line + totalPoints);
-		std::random_shuffle(square, square + totalPoints);
+		if (shufflePoints)
+			ShuffleShapes();
 
 		// Start us off in the line position
 		points = line;
@@ -140,13 +183,30 @@ public:
 			Draw(points[i].x, points[i].y, olc::WHITE);
 		}
 
+		if (GetKey(olc::Key::B).bPressed)
+			BuildShapes();
+
+		if (GetKey(olc::Key::S).bPressed)
+			ShuffleShapes();
+
 		if (GetMouse(0).bPressed)
 			isMorphing = true;
 
 
+		// Go backwards through shapes
 		if (GetMouse(1).bPressed && !isMorphing)
 		{
-			nextObject = (nextObject + 1) % 3;
+			nextObject = nextObject - 1;
+
+			if (nextObject < 0)
+				nextObject = totalObjects - 1;
+
+			if (nextObject == currentObject)
+				nextObject = nextObject - 1;
+
+			if (nextObject < 0)
+				nextObject = totalObjects - 1;
+
 			isMorphing = true;
 		}
 
@@ -165,7 +225,7 @@ public:
 			if (!isMorphing) {
 				currentTransitionTime = 0.0f;
 				currentObject = nextObject;
-				nextObject = (nextObject + 1) % 3;
+				nextObject = (nextObject + 1) % totalObjects;
 			}
 
 			currentTransitionTime = currentTransitionTime + fElapsedTime;
