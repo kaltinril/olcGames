@@ -15,12 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\Desktop\olcPixelGameEngine.h">
+    <ClInclude Include="olcPixelGameEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\Desktop\olcExampleProgram.cpp">
+    <ClCompile Include="pixelFire.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
