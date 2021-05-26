@@ -84,6 +84,37 @@ private:
 		snakeBody[2].y = ScreenHeight() / 2;
 	}
 
+	// We'll only check the head
+	void CheckForFruitCollision()
+	{
+		int fruitCollision = -1;
+
+		// Check for a collision with the head against all current fruit
+		for (int f = 0; f < currentFruitQuantity; f++)
+		{
+			if (snakeBody[0].x == fruits[f].point.x && snakeBody[0].y == fruits[f].point.y)
+			{
+				fruitCollision = f;
+				break;
+			}
+		}
+
+		// if we had a collision, remove the fruit
+		if (fruitCollision != -1)
+		{
+			totalPointsThisLevel += fruitPointsValue;
+			totalPoints += fruitPointsValue;
+			snakeLength++;
+
+			// loop over all fruit in the array and move them down one
+			for (int f = fruitCollision; f < currentFruitQuantity - 1; f++)
+				fruits[f] = fruits[f + 1];
+			
+			currentFruitQuantity--;
+		}
+		
+	}
+
 	void SpawnFruit()
 	{
 		// Don't allow us to add more fruit than allowed
@@ -113,6 +144,31 @@ private:
 
 		// Update the number of fruit we have
 		currentFruitQuantity++;
+	}
+
+	void CheckUserInput()
+	{
+		// Allow snake to move, but we can't turn back ontop of ourself
+		if (GetKey(olc::Key::LEFT).bPressed && xDir != 1)
+		{
+			xDir = -1;
+			yDir = 0;
+		}
+		if (GetKey(olc::Key::RIGHT).bPressed && xDir != -1)
+		{
+			xDir = 1;
+			yDir = 0;
+		}
+		if (GetKey(olc::Key::UP).bPressed && yDir != 1)
+		{
+			xDir = 0;
+			yDir = -1;
+		}
+		if (GetKey(olc::Key::DOWN).bPressed && yDir != -1)
+		{
+			xDir = 0;
+			yDir = 1;
+		}
 	}
 
 	void DrawSnake()
@@ -159,9 +215,12 @@ public:
 	{
 		Clear(olc::BLACK);
 
+		CheckUserInput();
+
 		DrawFruit();
 		DrawSnake();
 
+		CheckForFruitCollision();
 		timeSinceLastFruitSpawn += fElapsedTime;
 		SpawnFruit();
 
