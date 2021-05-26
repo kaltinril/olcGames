@@ -22,7 +22,7 @@ public:
 
 private:
 	// Create a simply X/Y structure for easier access
-	struct coords
+	struct point2D
 	{
 		int x;
 		int y;
@@ -35,10 +35,16 @@ private:
 		int blue;
 	};
 
+	struct fruitInstance
+	{
+		point2D point;
+		rgbColor color;
+	};
+
 	// Snake variables
 	int snakeLength = 3;  // Lets start the snake out with a head, a body, and a tail (length of 3)
 	const static int maxSnakeLength = 1000;
-	coords snakeBody[maxSnakeLength];
+	point2D snakeBody[maxSnakeLength];
 	rgbColor snakeColor = { 255, 255, 255 };
 
 	// Level variables
@@ -47,13 +53,17 @@ private:
 	int speedIncreasePerLevel = 2;
 	int totalPoints = 0;
 	int totalPointsThisLevel = 0;
+	int screenBoarder = 10;
+	float animate_elapsed = 0.0f;
+	float animate_rate = 0.03125f;  // 1.0f is 1 second.  0.03125f is  1/32 of a second
 
 	// Fruit variables
-	float spawnItemsPerSecond = 0.5; // Spawn 1 item every 2 seconds
-	int totalFruitAllowed = 5;
+	float timeSinceLastFruitSpawn = 0.0f;
+	float timeBetweenFruitSpawns = 2.0f; // Spawn 1 item every 2 seconds
+	const static int totalFruitAllowed = 5;
 	int currentFruitQuantity = 0;
 	int fruitPointsValue = 1;
-
+	fruitInstance fruits[totalFruitAllowed];
 
 	void StartLevel()
 	{
@@ -72,6 +82,37 @@ private:
 		snakeBody[2].y = ScreenHeight() / 2;
 	}
 
+	void SpawnFruit()
+	{
+		// Don't allow us to add more fruit than allowed
+		// Also prevents index out of bounds error on fruit object array
+		if (currentFruitQuantity >= totalFruitAllowed)
+			return;
+
+		// Not enough time has passed, we can't spawn a new one  yet
+		if (timeSinceLastFruitSpawn < timeBetweenFruitSpawns) {
+			return;
+		}
+
+		// Reduce elapsed time by amount of time passed;
+		timeSinceLastFruitSpawn = timeSinceLastFruitSpawn - timeBetweenFruitSpawns;
+
+		// Create our new fruit, placing it inside the screen boarders, and forcing it to be bright red.
+		fruitInstance fruit;
+
+		fruit.point.x = screenBoarder + (rand() % (ScreenWidth() - (screenBoarder * 2)));
+		fruit.point.y = screenBoarder + (rand() % (ScreenHeight() - (screenBoarder * 2)));
+
+		fruit.color.red = 255;
+		fruit.color.green = 0;
+		fruit.color.blue = 0;
+
+		fruits[currentFruitQuantity] = fruit;
+
+		// Update the number of fruit we have
+		currentFruitQuantity++;
+	}
+
 	void DrawSnake()
 	{
 		for (int i = 0; i < snakeLength; i++)
@@ -80,7 +121,8 @@ private:
 
 	void DrawFruit()
 	{
-
+		for (int i = 0; i < currentFruitQuantity; i++)
+			Draw(fruits[i].point.x, fruits[i].point.y, olc::Pixel(fruits[i].color.red, fruits[i].color.blue, fruits[i].color.green));
 	}
 
 public:
@@ -94,9 +136,17 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-
 		DrawFruit();
 		DrawSnake();
+
+		timeSinceLastFruitSpawn += fElapsedTime;
+		SpawnFruit();
+
+		animate_elapsed += fElapsedTime;
+		if (animate_elapsed > animate_rate) {
+			animate_elapsed = animate_elapsed - animate_rate;
+			// Handle updates to worm position here
+		}
 
 		return true;
 	}
