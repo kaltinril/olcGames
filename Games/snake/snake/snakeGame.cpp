@@ -46,6 +46,8 @@ private:
 	const static int maxSnakeLength = 1000;
 	point2D snakeBody[maxSnakeLength];
 	rgbColor snakeColor = { 255, 255, 255 };
+	int xDir = -1;
+	int yDir = 0;
 
 	// Level variables
 	int currentLevel = 0;
@@ -125,6 +127,18 @@ private:
 			Draw(fruits[i].point.x, fruits[i].point.y, olc::Pixel(fruits[i].color.red, fruits[i].color.blue, fruits[i].color.green));
 	}
 
+	void UpdateWorm()
+	{
+		// Starting with the tail
+		// move each point of the snake 
+		for (int i = snakeLength - 1; i > 0; i--)
+			snakeBody[i] = snakeBody[i - 1];
+
+		// Move the head
+		snakeBody[0].x = snakeBody[0].x + xDir;
+		snakeBody[0].y = snakeBody[0].y + yDir;
+	}
+
 public:
 	bool OnUserCreate() override
 	{
@@ -136,6 +150,8 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+		Clear(olc::BLACK);
+
 		DrawFruit();
 		DrawSnake();
 
@@ -146,6 +162,7 @@ public:
 		if (animate_elapsed > animate_rate) {
 			animate_elapsed = animate_elapsed - animate_rate;
 			// Handle updates to worm position here
+			UpdateWorm();
 		}
 
 		return true;
