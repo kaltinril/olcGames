@@ -2,15 +2,16 @@
 
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
+// A simple "snake" clone.  Or "worms.io" for the new kids
 
-class Snake : public olc::PixelGameEngine
+
+class SnakeGame : public olc::PixelGameEngine
 {
 public:
-	Snake()
+	SnakeGame()
 	{
 		sAppName = "Yummy!";
 	}
-
 
 public:
 	bool OnUserCreate() override
@@ -29,8 +30,8 @@ public:
 
 int main()
 {
-	Snake demo;
-	if (demo.Construct(600, 400, 2, 2))
+	SnakeGame demo;
+	if (demo.Construct(256, 240, 4, 4))
 		demo.Start();
 
 	return 0;
