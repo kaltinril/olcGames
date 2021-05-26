@@ -118,7 +118,14 @@ private:
 	void DrawSnake()
 	{
 		for (int i = 0; i < snakeLength; i++)
-			Draw(snakeBody[i].x, snakeBody[i].y, olc::Pixel(snakeColor.red, snakeColor.green, snakeColor.blue));
+		{
+			// Create a "greyscale" affect on the worm
+			int red = snakeColor.red * (1.0f - (i / (snakeLength - 1.0f)));
+			int green = snakeColor.green * (1.0f - (i / (snakeLength - 1.0f)));
+			int blue = snakeColor.blue * (1.0f - (i / (snakeLength - 1.0f)));
+			Draw(snakeBody[i].x, snakeBody[i].y, olc::Pixel(red , green , blue ));
+		}
+			
 	}
 
 	void DrawFruit()
@@ -134,7 +141,7 @@ private:
 		for (int i = snakeLength - 1; i > 0; i--)
 			snakeBody[i] = snakeBody[i - 1];
 
-		// Move the head
+		// Set the new head position "move the head"
 		snakeBody[0].x = snakeBody[0].x + xDir;
 		snakeBody[0].y = snakeBody[0].y + yDir;
 	}
