@@ -6,7 +6,7 @@
 // Library from One Lone Coder
 // Snake Game code by Kaltinril
 // This is the non-OO version
-// We will use two arrays (for simplicity), one for X, and one for Y.
+// We will a struct for the X/Y position of each snake body part
 // Other ways to do this would be to create a dynamic array, and each time the worm grows, add on to it
 // Another way would be to create a list or linked list, or doubly-linked list
 // All of those work, but add complexity and I want this first snake version to be as simple as possible
@@ -21,14 +21,25 @@ public:
 	}
 
 private:
+	// Create a simply X/Y structure for easier access
+	struct coords
+	{
+		int x;
+		int y;
+	};
+
+	struct rgbColor
+	{
+		int red;
+		int green;
+		int blue;
+	};
+
 	// Snake variables
 	int snakeLength = 3;  // Lets start the snake out with a head, a body, and a tail (length of 3)
 	const static int maxSnakeLength = 1000;
-	int snakeBodyX[maxSnakeLength];
-	int snakeBodyY[maxSnakeLength];
-	int snakeColorR = 255;
-	int snakeColorG = 255;
-	int snakeColorB = 255;
+	coords snakeBody[maxSnakeLength];
+	rgbColor snakeColor = { 255, 255, 255 };
 
 	// Level variables
 	int currentLevel = 0;
@@ -43,6 +54,7 @@ private:
 	int currentFruitQuantity = 0;
 	int fruitPointsValue = 1;
 
+
 	void StartLevel()
 	{
 		currentLevel++;
@@ -52,12 +64,23 @@ private:
 
 	void InitializeSnake()
 	{
-		snakeBodyX[0] = (ScreenWidth() / 2) - 1;
-		snakeBodyY[0] = ScreenHeight() / 2;
-		snakeBodyX[1] = ScreenWidth() / 2;
-		snakeBodyY[1] = ScreenHeight() / 2;
-		snakeBodyX[2] = (ScreenWidth() / 2) + 1;
-		snakeBodyY[2] = ScreenHeight() / 2;
+		snakeBody[0].x = (ScreenWidth() / 2) - 1;
+		snakeBody[0].y = ScreenHeight() / 2;
+		snakeBody[1].x = ScreenWidth() / 2;
+		snakeBody[1].y = ScreenHeight() / 2;
+		snakeBody[2].x = (ScreenWidth() / 2) + 1;
+		snakeBody[2].y = ScreenHeight() / 2;
+	}
+
+	void DrawSnake()
+	{
+		for (int i = 0; i < snakeLength; i++)
+			Draw(snakeBody[i].x, snakeBody[i].y, olc::Pixel(snakeColor.red, snakeColor.green, snakeColor.blue));
+	}
+
+	void DrawFruit()
+	{
+
 	}
 
 public:
@@ -72,8 +95,8 @@ public:
 	bool OnUserUpdate(float fElapsedTime) override
 	{
 
-		for (int i = 0; i < snakeLength; i++)
-			Draw(snakeBodyX[i], snakeBodyY[i], olc::Pixel(snakeColorR, snakeColorG, snakeColorB));
+		DrawFruit();
+		DrawSnake();
 
 		return true;
 	}
