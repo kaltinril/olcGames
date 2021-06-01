@@ -42,22 +42,21 @@ private:
 	};
 
 	// Snake variables
-	int snakeLength = 3;  // Lets start the snake out with a head, a body, and a tail (length of 3)
+	int snakeLength = 10;  // Lets start the snake out with a head, a body, and a tail (length of 3)
 	const static int maxSnakeLength = 1000;
 	point2D snakeBody[maxSnakeLength];
-	rgbColor snakeColor = { 255, 255, 255 };
+	rgbColor snakeColor = { 0, 255, 255 };
 	int xDir = -1;
 	int yDir = 0;
 
 	// Level variables
 	int currentLevel = 0;
-	int pointsToAdvanceLevel = 20;
-	int speedIncreasePerLevel = 2;
+	int pointsToAdvanceLevel = 10;
 	int totalPoints = 0;
 	int totalPointsThisLevel = 0;
 	int screenBoarder = 10;
 	float animate_elapsed = 0.0f;
-	float animate_rate = 0.03125f;  // 1.0f is 1 second.  0.03125f is  1/32 of a second
+	float animate_rate = 0.03125f;  // 1.0f is 1 second.  0.03125f is  1/32 of a second  1/30 = 0.01666f  1/16 = 0.0625
 
 	// Fruit variables
 	float timeSinceLastFruitSpawn = 0.0f;
@@ -171,6 +170,14 @@ private:
 		}
 	}
 
+	void ChangeLevelsIfComplete()
+	{
+		if (totalPointsThisLevel > pointsToAdvanceLevel)
+		{
+			StartLevel();
+		}
+	}
+
 	void DrawSnake()
 	{
 		for (int i = 0; i < snakeLength; i++)
@@ -230,6 +237,8 @@ public:
 			// Handle updates to worm position here
 			UpdateWorm();
 		}
+
+		ChangeLevelsIfComplete();
 
 		return true;
 	}
