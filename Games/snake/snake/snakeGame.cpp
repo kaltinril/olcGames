@@ -56,7 +56,7 @@ private:
 	int totalPointsThisLevel = 0;
 	int screenBoarder = 10;
 	float animate_elapsed = 0.0f;
-	float animate_rate = 0.03125f;  // 1.0f is 1 second.  0.03125f is  1/32 of a second  1/30 = 0.01666f  1/16 = 0.0625
+	float animate_rate = 0.04f;  // 1.0f is 1 second.  0.03125f is  1/32 of a second  1/30 = 0.01666f  1/16 = 0.0625
 
 	// Fruit variables
 	float timeSinceLastFruitSpawn = 0.0f;
@@ -248,7 +248,7 @@ public:
 int main()
 {
 	SnakeGame demo;
-	if (demo.Construct(256, 240, 4, 4))
+	if (demo.Construct(128, 120, 8, 8))
 		demo.Start();
 
 	return 0;
