@@ -15,7 +15,7 @@ private:
 	int water_fall_rate = 0;
 	int max_water_fall_rate = 50;
 	float animate_elapsed = 0.0f;
-	float animate_rate = 0.0078125f;  // 1.0f is 1 second.  0.03125f is  1/32 of a second
+	float animate_rate = 0.001f;  // 1.0f is 1 second.  0.03125f is  1/32 of a second
 	bool left = true;
 
 
@@ -34,7 +34,7 @@ private:
 		}
 	}
 
-	void MoveWater(bool left)
+	void MoveWater()
 	{
 		int direction = rand() % 2;
 		if (direction == 1)
@@ -81,21 +81,42 @@ private:
 		else
 		{
 			// Lets see if we can move randomly out left/right from the spot up to 5 max places if there is nothing in the way.
-			int spread = rand() % 5;
-			for (int i = spread; i > -spread; i--)
+			int spread = (rand() % 5) + 1;
+			
+			for (int i = 1; i < spread; i++)
 			{
+				// Edge of screen, can't move
 				if (x + i < 1 || x + i > ScreenWidth() - 1)
-					break;
+					return;
 
-				if (drops[y][x + i] == 1) // "Wall" can't move
-					break;
+				// "Wall" can't move
+				if (drops[y][x + i] == 1)
+					return;
 
 				if (drops[y][x + i] == 0)
 				{
 					// found a spot, move me
 					drops[y][x + i] = drops[y][x];
 					drops[y][x] = 0;
-					break;
+					return;
+				}
+			}
+			for (int i = -1; i > -spread; i--)
+			{
+				// Edge of screen, can't move
+				if (x + i < 1 || x + i > ScreenWidth() - 1)
+					return;
+
+				// "Wall" can't move
+				if (drops[y][x + i] == 1)
+					return;
+
+				if (drops[y][x + i] == 0)
+				{
+					// found a spot, move me
+					drops[y][x + i] = drops[y][x];
+					drops[y][x] = 0;
+					return;
 				}
 			}
 		}
@@ -103,7 +124,7 @@ private:
 
 	// Set the water drops array position to a random greyscale color from 128-255
 	void SpawnWaterAtSpot(int x_in, int y_in) {
-		int ball_size = 3;
+		int ball_size = 2;
 		int maxX = std::clamp(x_in + ball_size, 0, ScreenWidth());
 		int maxY = std::clamp(y_in + ball_size, 0, ScreenHeight());
 		int minX = std::clamp(x_in - ball_size, 0, ScreenWidth());
@@ -177,22 +198,34 @@ public:
 		}
 
 		// Increase frame rate if RIGHT arrow pressed
-		if (GetKey(olc::Key::RIGHT).bHeld || GetKey(olc::Key::RIGHT).bPressed) {
+		if (GetKey(olc::Key::RIGHT).bPressed || GetKey(olc::Key::RIGHT).bPressed) {
 			animate_rate = animate_rate - 0.0001;
 			if (animate_rate < 0)
 				animate_rate = 0;
 		}
 
 		// Increase frame rate if LEFT arrow pressed
-		if (GetKey(olc::Key::LEFT).bHeld || GetKey(olc::Key::LEFT).bPressed) {
+		if (GetKey(olc::Key::LEFT).bPressed || GetKey(olc::Key::LEFT).bPressed) {
 			animate_rate = animate_rate + 0.0001;
 			if (animate_rate > 0.5f)
 				animate_rate = 0.5f;
 		}
 
+		if (GetKey(olc::Key::P).bPressed) {
+			animate_rate = 0.1f;
+		}
+
+		if (GetKey(olc::Key::N).bPressed) {
+			animate_rate = 0.001f;
+		}
+
 		// [R] Reset the board
 		if (GetKey(olc::Key::R).bPressed)
 			ResetBoard();
+
+		// [Q] Quit
+		if (GetKey(olc::Key::Q).bPressed || GetKey(olc::Key::ESCAPE).bPressed)
+			return false;
 
 		// draw water
 		for (int x = 0; x < ScreenWidth(); x++)
@@ -206,8 +239,7 @@ public:
 			animate_elapsed = animate_elapsed - animate_rate;
 			SpawnWater(water_fall_rate); // Add some waterfall randomly
 			
-			
-			MoveWater(left);
+			MoveWater();
 		}
 
 		return true;
@@ -217,7 +249,7 @@ public:
 int main()
 {
 	Water water;
-	if (water.Construct(256, 240, 4, 4))
+	if (water.Construct(256, 240, 4, 4, false))
 		water.Start();
 	return 0;
 }
