@@ -303,7 +303,7 @@ public:
 int main()
 {
 	PixelFire demo;
-	if (demo.Construct(600, 400, 2, 2))
+	if (demo.Construct(600, 400, 2, 2, true))
 		demo.Start();
 
 	return 0;

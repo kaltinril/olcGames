@@ -249,7 +249,7 @@ public:
 int main()
 {
 	Water water;
-	if (water.Construct(256, 240, 4, 4, false))
+	if (water.Construct(256, 240, 4, 4, true))
 		water.Start();
 	return 0;
 }
