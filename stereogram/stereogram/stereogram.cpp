@@ -1,10 +1,17 @@
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
 
+#define DISPLAY_DOTS 0
+#define DISPLAY_PATTERN 1
+
+// Code written using information explained on this site
+// https://www.ime.usp.br/~otuyama/stereogram/basic/index.html
+// Re-written after learning more and reading code from this github project:
+// https://github.com/synesthesiam/magicpy
+
 class StereoGram : public olc::PixelGameEngine
 {
 public:
-	
 
 	StereoGram()
 	{
@@ -21,7 +28,7 @@ public:
 		for (int x = 0; x < ScreenWidth() / pattern_repetitions; x++)
 			for (int y = 0; y < ScreenHeight(); y++)
 			{
-				int color = (rand() % 2) * 255;
+				int color = rand() % 255; // (rand() % 2) * 255;
 				int red = color;// (rand() % 2) * 255;
 				int green = color;//(rand() % 2) * 255;
 				int blue = color;//(rand() % 2) * 255;
@@ -37,9 +44,6 @@ public:
 	void add_stereogram_sprite(int pattern_repetitions = 10, int inverse = 1)
 	{
 		// Eventually take in a sprite, convert it to greyscale, use the greyscale to change the "offset" or shift of the pixels
-		bool debug = false;
-		int imgX = 0;
-		int imgY = 0;
 		int offset = 0;
 		int pattern_width = ScreenWidth() / pattern_repetitions;
 		olc::Pixel pix;
@@ -59,78 +63,87 @@ public:
 				int shiftedSamplePosition = samplePixelPosition + (offset * inverse);
 				pix = PixelGameEngine::GetDrawTarget()->GetPixel(shiftedSamplePosition, y);
 
-				if (debug == true)
-					pix = olc::Pixel(255, 0, 0);
-
 				Draw(x, y, pix);
 			}
 		}
 	}
 
-
-	void add_stereogram_square()
-	{
-		int startx = (3 * ScreenWidth() / 4) - ScreenWidth() / 4;
-		int endx = (3 * ScreenWidth() / 4) + ScreenWidth() / 4;
-		int starty = (ScreenHeight() / 2) - (ScreenHeight() / 5);
-		int endy = (ScreenHeight() / 2) + (ScreenHeight() / 5);
-		bool debug = false;
-		for (int x = startx; x < endx; x++)
-			for (int y = starty; y < endy; y++)
-			{
-				olc::Pixel pix = PixelGameEngine::GetDrawTarget()->GetPixel(x, y);
-
-				if (debug == true)
-					if (x == startx || x == endx - 1 || y == starty || y == endy - 1)
-						pix = olc::Pixel(255, 0, 0);
-
-				Draw(x - 3, y, pix);
-			}
-	}
-
-
-	void stamp_background()
+	/// <summary>
+	/// This creates a pattern that is repeated instead of random dots that are repeated
+	/// </summary>
+	/// <param name="pattern_repetitions"></param>
+	void stamp_background(int pattern_repetitions = 10)
 	{
 		int skip_x = backgroundPattern->width;
 		int skip_y = backgroundPattern->height;
 		for (int y = 0; y < ScreenHeight(); y = y + skip_y)
 		{
-			for (int x = 0; x < ScreenWidth(); x = x + skip_x)
+			for (int x = 0; x < ScreenWidth() / pattern_repetitions; x = x + skip_x)
 			{
 				DrawSprite(olc::vi2d(x, y), backgroundPattern.get());
 			}
 		}
-
-		/*for (int x = 0; x < ScreenWidth() / 2; x++)
-			for (int y = 0; y < ScreenHeight(); y++)
-			{
-				olc::Pixel pix = PixelGameEngine::GetDrawTarget()->GetPixel(x, y);
-				Draw(x + ScreenWidth() / 2, y, pix);
-			}
-		*/
 	}
 
 private:
 	std::unique_ptr<olc::Sprite> threeDImage;
 	std::unique_ptr<olc::Sprite> backgroundPattern;
+	int state = DISPLAY_DOTS;
+	int invert_display = 1;
 
 public:
 	bool OnUserCreate() override
 	{
-		
 		// Load the sprite
 		threeDImage = std::make_unique<olc::Sprite>("./800x500.png");
-		backgroundPattern = std::make_unique<olc::Sprite>("./background_2.png");
+		backgroundPattern = std::make_unique<olc::Sprite>("./background_pattern_tenth.png");
 
-		
+		// Start user off with random background
 		create_dot_pattern(10);
-		//stamp_background();
-		add_stereogram_sprite(10, 1);
+		add_stereogram_sprite(10, invert_display);
+
 		return true;
 	}
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+		int updateNeeded = 0;
+
+		// Right mouse inverts the image
+		if (GetMouse(1).bReleased)
+		{
+			updateNeeded = 1;
+			invert_display *= -1;
+		}
+
+		// Left mouse changes between dots and pattern
+		if (GetMouse(0).bReleased)
+		{
+			updateNeeded = 1;
+			if (state == DISPLAY_DOTS)
+				state = DISPLAY_PATTERN;
+			else
+				state = DISPLAY_DOTS;
+		}
+
+		// If a change happend (a click), then draw the update)
+		if (updateNeeded)
+		{
+			if (state == DISPLAY_DOTS)
+			{
+				create_dot_pattern(10);
+				add_stereogram_sprite(10, invert_display);
+			}
+			else
+			{
+				stamp_background(10);
+				add_stereogram_sprite(10, invert_display);
+			}
+		}
+
+		// [Q] Quit
+		if (GetKey(olc::Key::Q).bPressed || GetKey(olc::Key::ESCAPE).bPressed)
+			return false;
 
 		return true;
 	}
@@ -139,9 +152,11 @@ public:
 
 int main()
 {
-	StereoGram demo;
-	if (demo.Construct(800, 500, 2, 2, false, false))
-		demo.Start();
+	StereoGram stereogram;
+	bool fullscreen = true;
+	bool vsync = false;
+	if (stereogram.Construct(800, 500, 2, 2, fullscreen, vsync))
+		stereogram.Start();
 
 	return 0;
 }
