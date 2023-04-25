@@ -35,6 +35,7 @@ private:
 		int blue;
 	};
 
+	// fuitInstance can be expanded to include more data like points or value or lifetime on how long it lives
 	struct fruitInstance
 	{
 		point2D point;
@@ -43,7 +44,7 @@ private:
 
 	// Snake variables
 	int snakeLength = 10;  // Lets start the snake out with a head, a body, and a tail (length of 3)
-	const static int maxSnakeLength = 1000;
+	const static int maxSnakeLength = 500;
 	point2D snakeBody[maxSnakeLength];
 	rgbColor snakeColor = { 0, 255, 255 };
 	int xDir = -1;
@@ -54,7 +55,7 @@ private:
 	int pointsToAdvanceLevel = 10;
 	int totalPoints = 0;
 	int totalPointsThisLevel = 0;
-	int screenBoarder = 10;
+	int screenBoarder = 0;
 	float animate_elapsed = 0.0f;
 	float animate_rate = 0.04f;  // 1.0f is 1 second.  0.03125f is  1/32 of a second  1/30 = 0.01666f  1/16 = 0.0625
 
@@ -170,12 +171,19 @@ private:
 		}
 	}
 
-	void ChangeLevelsIfComplete()
+	void ChangeLevelsIsComplete()
 	{
 		if (totalPointsThisLevel > pointsToAdvanceLevel)
 		{
 			StartLevel();
 		}
+	}
+
+	// Expand this to include different types of fruits perhaps.
+	void DrawFruit()
+	{
+		for (int i = 0; i < currentFruitQuantity; i++)
+			Draw(fruits[i].point.x, fruits[i].point.y, olc::Pixel(fruits[i].color.red, fruits[i].color.blue, fruits[i].color.green));
 	}
 
 	void DrawSnake()
@@ -191,10 +199,11 @@ private:
 			
 	}
 
-	void DrawFruit()
+	void DrawBorder()
 	{
-		for (int i = 0; i < currentFruitQuantity; i++)
-			Draw(fruits[i].point.x, fruits[i].point.y, olc::Pixel(fruits[i].color.red, fruits[i].color.blue, fruits[i].color.green));
+		int width = ScreenWidth() - ((screenBoarder * 2) + 1);		// * 2 because left and right border
+		int height = ScreenHeight() - ((screenBoarder * 2) + 1);	// sutract another 1 because the border itself is 1 pixel
+		DrawRect(screenBoarder, screenBoarder, width, height, olc::WHITE);
 	}
 
 	void UpdateWorm()
@@ -226,6 +235,7 @@ public:
 
 		DrawFruit();
 		DrawSnake();
+		DrawBorder();
 
 		CheckForFruitCollision();
 		timeSinceLastFruitSpawn += fElapsedTime;
@@ -238,7 +248,11 @@ public:
 			UpdateWorm();
 		}
 
-		ChangeLevelsIfComplete();
+		ChangeLevelsIsComplete();
+
+		// If esc is pressed, quit
+		if (GetKey(olc::Key::ESCAPE).bPressed)
+			return false;
 
 		return true;
 	}
@@ -248,7 +262,9 @@ public:
 int main()
 {
 	SnakeGame demo;
-	if (demo.Construct(128, 120, 8, 8))
+	// Lets make large pixels for fun
+	bool fullScreen = true;
+	if (demo.Construct(64, 128, 16, 16, fullScreen))
 		demo.Start();
 
 	return 0;
