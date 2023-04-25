@@ -7,7 +7,7 @@
 // Library from One Lone Coder
 // Snake Game code by Kaltinril
 // This is the non-OO version
-// We will a struct for the X/Y position of each snake body part
+// We use a struct for the X/Y position of each snake body part
 // Other ways to do this would be to create a dynamic array, and each time the worm grows, add on to it
 // Another way would be to create a list or linked list, or doubly-linked list
 // All of those work, but add complexity and I want this first snake version to be as simple as possible
@@ -52,6 +52,7 @@ private:
 	int yDir = 0;
 
 	// Level variables
+	bool gameIsOver = false;
 	bool levelIsPaused = true;
 	int currentLevel = 0;
 	int pointsToAdvanceLevel = 10;
@@ -81,14 +82,32 @@ private:
 		currentFruitQuantity = 0;
 	}
 
+	void ResetGame()
+	{
+		animate_rate = 0.04f;
+		currentLevel = 1;
+		totalPoints = 0;
+
+		timeBetweenFruitSpawns = 2.0f;
+		timeSinceLastFruitSpawn = 0.0f;
+		totalFruitAllowed = 5;
+		currentFruitQuantity = 0;
+		ResetLevel();
+
+		snakeLength = 10;
+		InitializeSnake();
+	}
+
 	void InitializeSnake()
 	{
 		snakeBody[0].x = (ScreenWidth() / 2) - 1;
 		snakeBody[0].y = ScreenHeight() / 2;
-		snakeBody[1].x = ScreenWidth() / 2;
-		snakeBody[1].y = ScreenHeight() / 2;
-		snakeBody[2].x = (ScreenWidth() / 2) + 1;
-		snakeBody[2].y = ScreenHeight() / 2;
+
+		for (int i = 1; i < snakeLength; i++)
+		{
+			snakeBody[i].x = snakeBody[i - 1].x + 1;
+			snakeBody[i].y = snakeBody[i - 1].y;
+		}
 	}
 
 	// We'll only check the head
@@ -202,6 +221,14 @@ private:
 		if (GetKey(olc::Key::SPACE).bPressed)
 		{
 			levelIsPaused = !levelIsPaused; // if true, becomes false, if false, becomes true (Invert)
+
+			// Special case, if the game was over, clear pause also when they press it
+			if (gameIsOver)
+			{
+				gameIsOver = false;
+				levelIsPaused = false;
+				ResetGame();
+			}
 		}
 	}
 
@@ -236,6 +263,13 @@ private:
 		}
 	}
 
+	void DrawBorder()
+	{
+		int width = ScreenWidth() - ((screenBoarder * 2) + 1);		// * 2 because left and right border
+		int height = ScreenHeight() - ((screenBoarder * 2) + 1);	// sutract another 1 because the border itself is 1 pixel
+		DrawRect(screenBoarder, screenBoarder, width, height, olc::WHITE);
+	}
+
 	void DrawLevelStats()
 	{
 		// Make the text "transparent-ish"
@@ -254,11 +288,12 @@ private:
 		SetPixelMode(olc::Pixel::NORMAL);
 	}
 
-	void DrawBorder()
+	void DrawGameOverScreen()
 	{
-		int width = ScreenWidth() - ((screenBoarder * 2) + 1);		// * 2 because left and right border
-		int height = ScreenHeight() - ((screenBoarder * 2) + 1);	// sutract another 1 because the border itself is 1 pixel
-		DrawRect(screenBoarder, screenBoarder, width, height, olc::WHITE);
+		DrawStringPropDecal({ 14, (float)(ScreenHeight() / 2) - 10 }, "GAME",  olc::RED, { 1, 1 });
+		DrawStringPropDecal({ 14, (float)(ScreenHeight() / 2) }		, "OVER",  olc::RED, { 1, 1 });
+		DrawStringPropDecal({ 12, (float)(ScreenHeight() / 2) + 10 }, "PRESS", olc::YELLOW, { 1, 1 });
+		DrawStringPropDecal({ 12, (float)(ScreenHeight() / 2) + 20 }, "SPACE", olc::YELLOW, { 1, 1 });
 	}
 
 	void UpdateWorm()
@@ -271,6 +306,13 @@ private:
 		// Set the new head position "move the head"
 		snakeBody[0].x = snakeBody[0].x + xDir;
 		snakeBody[0].y = snakeBody[0].y + yDir;
+	}
+
+	void CheckIfOutOfBounds()
+	{
+		if (   snakeBody[0].x <= screenBoarder || snakeBody[0].x >= ScreenWidth() - screenBoarder
+			|| snakeBody[0].y <= screenBoarder || snakeBody[0].y >= ScreenHeight() - screenBoarder)
+			gameIsOver = true;
 	}
 
 public:
@@ -294,19 +336,26 @@ public:
 		if (GetKey(olc::Key::ESCAPE).bPressed)
 			return false;
 
+		DrawBorder();
 		DrawFruit();
 		DrawSnake();
-		DrawBorder();
 		DrawLevelStats();
 
 		CheckForFruitCollision();
 		UpdateFruit();
 		timeSinceLastFruitSpawn += fElapsedTime;
 
+		CheckIfOutOfBounds();
+
 		// no reason to update the worm position, or spawn new fruit if the level is paused
 		// All logic below this IF statement should only be logic that will run
 		// when the level is UN-PAUSED
-		if (levelIsPaused)
+		if (gameIsOver)
+		{
+			DrawGameOverScreen();
+			return true;
+		}
+		else if (levelIsPaused)
 		{
 			DrawStringPropDecal({ 12, (float)(ScreenHeight() / 2) + 10 }, "PRESS", olc::YELLOW, {1, 1});
 			DrawStringPropDecal({ 12, (float)(ScreenHeight() / 2) + 20 }, "SPACE", olc::YELLOW, {1, 1});
