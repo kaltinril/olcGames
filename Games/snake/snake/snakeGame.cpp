@@ -64,10 +64,10 @@ private:
 	// Fruit variables
 	float timeSinceLastFruitSpawn = 0.0f;
 	float timeBetweenFruitSpawns = 2.0f; // Spawn 1 item every 2 seconds
-	const static int totalFruitAllowed = 5;
+	int totalFruitAllowed = 5;
 	int currentFruitQuantity = 0;
 	int fruitPointsValue = 1;
-	fruitInstance fruits[totalFruitAllowed];
+	fruitInstance* fruits;
 
 	void StartLevel()
 	{
@@ -209,6 +209,8 @@ private:
 	{
 		if (totalPointsThisLevel > pointsToAdvanceLevel)
 		{
+			timeBetweenFruitSpawns = timeBetweenFruitSpawns - 0.05;
+			totalFruitAllowed++;
 			StartLevel();
 		}
 	}
@@ -274,6 +276,8 @@ public:
 	bool OnUserCreate() override
 	{
 		InitializeSnake();
+
+		fruits = new fruitInstance[totalFruitAllowed];
 
 		StartLevel();
 		return true;
