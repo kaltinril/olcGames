@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
@@ -232,6 +233,24 @@ private:
 		}
 	}
 
+	void DrawLevelStats()
+	{
+		// Make the text "transparent-ish"
+		SetPixelMode(olc::Pixel::ALPHA);
+
+		// Draw Points
+		std::string stringToDraw = std::to_string(totalPoints);
+		olc::Pixel transparentYellow = olc::Pixel(255, 255, 0, 196);
+		DrawStringPropDecal({ 2, 2 }, stringToDraw, transparentYellow, { 1, 1 });
+
+		// Draw Level
+		stringToDraw = std::to_string(currentLevel);
+		DrawStringPropDecal({ (float)ScreenWidth() - 10, 2 }, stringToDraw, transparentYellow, { 1, 1 });
+
+		// Reset pixel mode to normal
+		SetPixelMode(olc::Pixel::NORMAL);
+	}
+
 	void DrawBorder()
 	{
 		int width = ScreenWidth() - ((screenBoarder * 2) + 1);		// * 2 because left and right border
@@ -273,6 +292,7 @@ public:
 		DrawFruit();
 		DrawSnake();
 		DrawBorder();
+		DrawLevelStats();
 
 		CheckForFruitCollision();
 		UpdateFruit();
@@ -283,11 +303,8 @@ public:
 		// when the level is UN-PAUSED
 		if (levelIsPaused)
 		{
-
 			DrawStringPropDecal({ 12, (float)(ScreenHeight() / 2) + 10 }, "PRESS", olc::YELLOW, {1, 1});
-			DrawStringPropDecal({ 12, (float)(ScreenHeight() / 2) + 20 }, "SPACE", olc::YELLOW, { 1, 1 });
-			//DrawStringPropDecal({ 5, (ScreenHeight() / 2) + 10 }, "Press", olc::WHITE);
-			//DrawStringPropDecal({ 5, (ScreenHeight() / 2) + 20 }, "SPACE", olc::WHITE);
+			DrawStringPropDecal({ 12, (float)(ScreenHeight() / 2) + 20 }, "SPACE", olc::YELLOW, {1, 1});
 			return true;
 		}
 
@@ -312,7 +329,7 @@ int main()
 	SnakeGame demo;
 	// Lets make large pixels for fun
 	bool fullScreen = true;
-	if (demo.Construct(64, 128, 16, 16, fullScreen))
+	if (demo.Construct(64, 64, 16, 16, fullScreen))
 		demo.Start();
 
 	return 0;
