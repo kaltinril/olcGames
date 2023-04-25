@@ -221,7 +221,8 @@ private:
 
 	void DrawSnake()
 	{
-		for (int i = 0; i < snakeLength; i++)
+		// Draw tail first
+		for (int i = snakeLength - 1; i >= 0; i--)
 		{
 			// Create a "greyscale" affect on the worm
 			int red = snakeColor.red * (1.0f - (i / (snakeLength - 1.0f)));
