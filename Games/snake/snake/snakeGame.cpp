@@ -211,6 +211,7 @@ private:
 		{
 			timeBetweenFruitSpawns = timeBetweenFruitSpawns - 0.05;
 			totalFruitAllowed++;
+			animate_rate = animate_rate - 0.001f;
 			StartLevel();
 		}
 	}
