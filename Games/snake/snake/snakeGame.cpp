@@ -51,6 +51,7 @@ private:
 	int yDir = 0;
 
 	// Level variables
+	bool levelIsPaused = true;
 	int currentLevel = 0;
 	int pointsToAdvanceLevel = 10;
 	int totalPoints = 0;
@@ -70,6 +71,11 @@ private:
 	void StartLevel()
 	{
 		currentLevel++;
+		ResetLevel();
+	}
+
+	void ResetLevel()
+	{
 		totalPointsThisLevel = 0;
 		currentFruitQuantity = 0;
 	}
@@ -99,20 +105,43 @@ private:
 			}
 		}
 
-		// if we had a collision, remove the fruit
+		// if we had a collision, eat the fruit, and then remove the fruit
 		if (fruitCollision != -1)
 		{
-			totalPointsThisLevel += fruitPointsValue;
-			totalPoints += fruitPointsValue;
-			snakeLength++;
-
-			// loop over all fruit in the array and move them down one
-			for (int f = fruitCollision; f < currentFruitQuantity - 1; f++)
-				fruits[f] = fruits[f + 1];
-			
-			currentFruitQuantity--;
+			EatFruitAtIndex(fruitCollision);
+			RemoveFruitAtIndex(fruitCollision);
 		}
+	}
+
+	void EatFruitAtIndex(int fruitIndex)
+	{
+		// Currently no reason to have this method, however, if you add different types of fruit
+		// here is where you would put the logic for what each can do
+		// This might make it easier to track the logic, and eventually, move it into classes
+		totalPointsThisLevel += fruitPointsValue;
+		totalPoints += fruitPointsValue;
+		snakeLength++;
+	}
+
+	void RemoveFruitAtIndex(int fruitIndex)
+	{
+		// loop over all fruit in the array and move them down one
+		for (int f = fruitIndex; f < currentFruitQuantity - 1; f++)
+			fruits[f] = fruits[f + 1];
+
+		currentFruitQuantity--;
+	}
+
+	void UpdateFruit()
+	{
+		// Add logic here for fruit disappearing after N seconds
+		// or maybe the fruit stays but slowly rots and turns black
+		// or maybe you just want to animate the fruit
 		
+		//for (int f = 0; f < currentFruitQuantity; f++)
+		//{
+		//	fruits[f]
+		//}
 	}
 
 	void SpawnFruit()
@@ -169,9 +198,13 @@ private:
 			xDir = 0;
 			yDir = 1;
 		}
+		if (GetKey(olc::Key::SPACE).bPressed)
+		{
+			levelIsPaused = !levelIsPaused; // if true, becomes false, if false, becomes true (Invert)
+		}
 	}
 
-	void ChangeLevelsIsComplete()
+	void ChangeLevelsIfComplete()
 	{
 		if (totalPointsThisLevel > pointsToAdvanceLevel)
 		{
@@ -196,7 +229,6 @@ private:
 			int blue = snakeColor.blue * (1.0f - (i / (snakeLength - 1.0f)));
 			Draw(snakeBody[i].x, snakeBody[i].y, olc::Pixel(red , green , blue ));
 		}
-			
 	}
 
 	void DrawBorder()
@@ -233,12 +265,31 @@ public:
 
 		CheckUserInput();
 
+		// If esc is pressed, quit
+		if (GetKey(olc::Key::ESCAPE).bPressed)
+			return false;
+
 		DrawFruit();
 		DrawSnake();
 		DrawBorder();
 
 		CheckForFruitCollision();
+		UpdateFruit();
 		timeSinceLastFruitSpawn += fElapsedTime;
+
+		// no reason to update the worm position, or spawn new fruit if the level is paused
+		// All logic below this IF statement should only be logic that will run
+		// when the level is UN-PAUSED
+		if (levelIsPaused)
+		{
+
+			DrawStringPropDecal({ 12, (float)(ScreenHeight() / 2) + 10 }, "PRESS", olc::YELLOW, {1, 1});
+			DrawStringPropDecal({ 12, (float)(ScreenHeight() / 2) + 20 }, "SPACE", olc::YELLOW, { 1, 1 });
+			//DrawStringPropDecal({ 5, (ScreenHeight() / 2) + 10 }, "Press", olc::WHITE);
+			//DrawStringPropDecal({ 5, (ScreenHeight() / 2) + 20 }, "SPACE", olc::WHITE);
+			return true;
+		}
+
 		SpawnFruit();
 
 		animate_elapsed += fElapsedTime;
@@ -248,11 +299,7 @@ public:
 			UpdateWorm();
 		}
 
-		ChangeLevelsIsComplete();
-
-		// If esc is pressed, quit
-		if (GetKey(olc::Key::ESCAPE).bPressed)
-			return false;
+		ChangeLevelsIfComplete();
 
 		return true;
 	}
